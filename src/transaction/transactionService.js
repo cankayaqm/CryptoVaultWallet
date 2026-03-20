@@ -1,4 +1,5 @@
 let balance = 500;
+let transactions = [];
 
 export const sendCrypto = (amount, address) => {
   if (!address || address.length < 5) {
@@ -15,10 +16,23 @@ export const sendCrypto = (amount, address) => {
 
   balance -= amount;
 
-  return {
-    success: true,
-    txId: "0x" + Math.random().toString(16).substring(2, 10),
-    newBalance: balance,
+  const tx = {
+    id: "0x" + Math.random().toString(16).substring(2, 10),
+    type: "send",
+    amount,
+    address,
+    status: "success",
     timestamp: new Date().toLocaleString()
   };
+
+  transactions.push(tx);
+
+  return {
+    success: true,
+    ...tx,
+    newBalance: balance
+  };
+};
+export const getTransactions = () => {
+  return transactions;
 };

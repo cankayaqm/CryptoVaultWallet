@@ -11,3 +11,8 @@ export const sendCryptoController = (req, res) => {
     res.status(400).json(result);
   }
 };
+import { getTransactions } from "../transaction/transactionService.js";
+
+export const getTransactionHistory = (req, res) => {
+  res.json(getTransactions());
+};
