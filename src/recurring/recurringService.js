@@ -1,3 +1,5 @@
+import { getBalance } from "../transaction/transactionService.js";
+
 let recurringPayments = [];
 
 export const createRecurringPayment = (amount, address, frequency) => {
@@ -12,6 +14,11 @@ export const createRecurringPayment = (amount, address, frequency) => {
 
   if (!frequency) {
     return { success:false, message:"Frequency required" };
+  }
+
+  // NEW CHECK
+  if (amount > getBalance()) {
+    return { success:false, message:"Insufficient funds" };
   }
 
   const recurring = {
