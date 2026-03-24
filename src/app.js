@@ -1,10 +1,14 @@
 import express from "express";
-import transactionRoutes from "./routes/transactionRoutes.js";
+import path from "path";
+import { fileURLToPath } from "url";
 
 const app = express();
 
 app.use(express.json());
 
-app.use("/api/transactions", transactionRoutes);
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-export default app;
+app.use(express.static(
+path.join(__dirname,"../public")
+));
