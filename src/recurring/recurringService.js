@@ -1,50 +1,61 @@
 import { getBalance } from "../transaction/transactionService.js";
 
-// Recurring payment service
-// Handles creation, retrieval and cancellation of scheduled payments
-// Uses in-memory storage (no database)
-
 let recurringPayments = [];
 
+const VALID_FREQUENCIES = ["daily", "weekly", "monthly"];
+
+const calculateNextExecution = (frequency) => {
+  const nextDate = new Date();
+
+  if (frequency === "daily") {
+    nextDate.setDate(nextDate.getDate() + 1);
+  } else if (frequency === "weekly") {
+    nextDate.setDate(nextDate.getDate() + 7);
+  } else if (frequency === "monthly") {
+    nextDate.setMonth(nextDate.getMonth() + 1);
+  }
+
+  return nextDate.toLocaleString();
+};
+
 export const createRecurringPayment = (amount, address, frequency) => {
-
-  if (!address || address.length < 5) {
-    return { success:false, message:"Invalid wallet address" };
+  if (!address || address.trim().length < 5) {
+    return { success: false, message: "Invalid wallet address" };
   }
 
-  if (amount <= 0) {
-    return { success:false, message:"Amount must be greater than 0" };
+  if (isNaN(amount) || amount <= 0) {
+    return { success: false, message: "Amount must be greater than 0" };
   }
-
-  const validFrequencies = ["daily", "weekly", "monthly"];
 
   if (!frequency) {
-    return { success:false, message:"Frequency required" };
+    return { success: false, message: "Frequency required" };
   }
 
-  if (!validFrequencies.includes(frequency)) {
-    return { success:false, message:"Invalid frequency" };
+  if (!VALID_FREQUENCIES.includes(frequency)) {
+    return { success: false, message: "Invalid frequency" };
   }
 
   if (amount > getBalance()) {
-    return { success:false, message:"Insufficient funds" };
+    return { success: false, message: "Insufficient funds" };
   }
 
+  const createdAt = new Date().toLocaleString();
+
   const recurring = {
-    id: Math.random().toString(16).substring(2,10),
-    type:"recurring",
+    id: Math.random().toString(16).substring(2, 10),
+    type: "recurring",
     amount,
-    address,
+    address: address.trim(),
     frequency,
-    status:"active",
-    createdAt: new Date().toLocaleString(),
-    nextExecution: new Date().toLocaleString()
+    status: "active",
+    createdAt,
+    nextExecution: calculateNextExecution(frequency)
   };
 
   recurringPayments.push(recurring);
 
   return {
-    success:true,
+    success: true,
     recurring
   };
 };
@@ -54,14 +65,18 @@ export const getRecurringPayments = () => {
 };
 
 export const cancelRecurringPayment = (id) => {
-  const payment = recurringPayments.find(p => p.id === id);
+  const payment = recurringPayments.find((p) => p.id === id);
 
   if (!payment) {
-    return { success:false, message:"Not found" };
+    return { success: false, message: "Not found" };
+  }
+
+  if (payment.status === "cancelled") {
+    return { success: false, message: "Recurring payment already cancelled" };
   }
 
   payment.status = "cancelled";
   payment.cancelledAt = new Date().toLocaleString();
 
-  return { success:true, payment };
+  return { success: true, payment };
 };
